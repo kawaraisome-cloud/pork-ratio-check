@@ -2,6 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
+from datetime import datetime
 
 def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
     img = np.array(image)
@@ -47,41 +48,12 @@ def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
 # --- UI Setup ---
 st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
 
-# CSS แก้ไขอักษรขาดและจัดระเบียบหน้าจอ
 st.markdown("""
     <style>
-    /* เพิ่มระยะห่างด้านบนสุดให้มากขึ้นเพื่อไม่ให้อักษรขาด */
-    .block-container {
-        padding-top: 3.5rem !important;
-        padding-bottom: 1rem !important;
-        max-width: 95% !important;
-    }
-    /* ปรับแต่งหัวข้อหลักให้ชัดเจน */
-    .main-title {
-        font-size: 2.2rem !important;
-        font-weight: bold;
-        margin-bottom: 1.5rem !important;
-        color: #31333F;
-        line-height: 1.2 !important;
-    }
-    /* จัดการรูปภาพให้สมดุล */
-    .stImage > img {
-        width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-        border-radius: 8px;
-        background-color: #f8f9fb;
-    }
-    /* ลดช่องว่างแนวตั้ง */
-    div.stVerticalBlock {
-        gap: 1rem !important;
-    }
-    /* ปรับหัวข้อคอลัมน์ภาพ */
-    h3 {
-        font-size: 1.15rem !important;
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
-    }
+    .block-container { padding-top: 3rem !important; max-width: 95% !important; }
+    .main-title { font-size: 2.2rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
+    .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
+    .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -97,6 +69,14 @@ sat_th = st.sidebar.slider("ความจืด", 0, 255, 110)
 # Main Title
 st.markdown('<p class="main-title">🥩 เครื่องคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
 
+# --- ส่วนกรอกข้อมูลสินค้า (เพิ่มใหม่) ---
+with st.expander("📝 บันทึกข้อมูลสินค้า / LOT (คลิกเพื่อระบุรายละเอียด)", expanded=True):
+    col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
+    product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
+    product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
+    inspector = col_in3.text_input("ผู้ตรวจสอบ", placeholder="ระบุชื่อของคุณ")
+    remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
+
 uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
 
 if uploaded_file is not None:
@@ -105,34 +85,41 @@ if uploaded_file is not None:
     with st.spinner('🔍 กำลังวิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-    # Metrics (ไม่มี Progress Bar แล้ว)
     st.divider()
+
+    # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
+    st.markdown(f"""
+    <div class="product-info">
+        <b>ข้อมูลการตรวจสอบ</b><br>
+        วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}<br>
+        <b>LOT:</b> {product_lot if product_lot else '-'} | 
+        <b>สินค้า:</b> {product_name if product_name else '-'} | 
+        <b>ผู้ตรวจ:</b> {inspector if inspector else '-'}<br>
+        <b>หมายเหตุ:</b> {remark if remark else '-'}
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Metrics
     m_col1, m_col2 = st.columns(2)
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
+    
     st.divider()
 
     if view_mode == "Desktop":
-        # จัดระเบียบ 3 คอลัมน์
         col1, col2, col3 = st.columns(3)
-        
         with col1:
             st.subheader("🖼️ 1. รูปต้นฉบับ")
             st.image(image, use_container_width=True)
-            
         with col2:
             st.subheader("✅ 2. ผลวิเคราะห์")
             st.image(result_img, use_container_width=True)
-            
         with col3:
             st.subheader("🎭 3. แยกสี (Mask)")
             sub_c1, sub_c2 = st.columns(2)
-            with sub_c1:
-                st.image(m_light, caption="สว่าง", use_container_width=True)
-            with sub_c2:
-                st.image(m_pale, caption="จืด", use_container_width=True)
+            sub_c1.image(m_light, caption="สว่าง", use_container_width=True)
+            sub_c2.image(m_pale, caption="จืด", use_container_width=True)
     else:
-        # Mobile Mode
         st.subheader("✅ ผลวิเคราะห์")
         st.image(result_img, use_container_width=True)
         st.subheader("🖼️ รูปต้นฉบับ")
@@ -142,4 +129,4 @@ if uploaded_file is not None:
             st.image(m_pale, caption="ความจืด", use_container_width=True)
 
 else:
-    st.info("💡 กรุณาอัปโหลดรูปภาพเพื่อเริ่มต้น")
+    st.info("💡 กรุณากรอกข้อมูลสินค้าและอัปโหลดรูปภาพเพื่อเริ่มต้น")
