@@ -51,7 +51,7 @@ st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
 st.markdown("""
     <style>
     .block-container { padding-top: 3rem !important; max-width: 95% !important; }
-    .main-title { font-size: 2.2rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
+    .main-title { font-size: 1.5rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
     .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
     .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
     </style>
@@ -74,7 +74,7 @@ with st.expander("📝 บันทึกข้อมูลสินค้า / 
     col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
     product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
     product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
-    remark = st.text_input("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
+    remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
 
 uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
 
@@ -84,13 +84,13 @@ if uploaded_file is not None:
     with st.spinner('🔍 กำลังวิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-  # ---   st.divider()
+  # ---  st.divider()
 
     # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
     st.markdown(f"""
     <div class="product-info">
         <b>ข้อมูลการตรวจสอบ</b><br>
-        วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}<br>
+        วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}
         <b>LOT:</b> {product_lot if product_lot else '-'} | 
         <b>สินค้า:</b> {product_name if product_name else '-'} | 
         <b>หมายเหตุ:</b> {remark if remark else '-'}
@@ -102,7 +102,7 @@ if uploaded_file is not None:
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
     
- # ---    st.divider()
+ # ---   st.divider()
 
     if view_mode == "Desktop":
         col1, col2, col3 = st.columns(3)
