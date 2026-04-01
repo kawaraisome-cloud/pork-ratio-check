@@ -74,7 +74,6 @@ with st.expander("📝 บันทึกข้อมูลสินค้า / 
     col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
     product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
     product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
-    inspector = col_in3.text_input("ผู้ตรวจสอบ", placeholder="ระบุชื่อของคุณ")
     remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
 
 uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
@@ -85,7 +84,7 @@ if uploaded_file is not None:
     with st.spinner('🔍 กำลังวิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-    st.divider()
+  # ---  st.divider()
 
     # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
     st.markdown(f"""
@@ -94,7 +93,6 @@ if uploaded_file is not None:
         วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}<br>
         <b>LOT:</b> {product_lot if product_lot else '-'} | 
         <b>สินค้า:</b> {product_name if product_name else '-'} | 
-        <b>ผู้ตรวจ:</b> {inspector if inspector else '-'}<br>
         <b>หมายเหตุ:</b> {remark if remark else '-'}
     </div>
     """, unsafe_allow_html=True)
