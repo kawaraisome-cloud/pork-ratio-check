@@ -97,7 +97,7 @@ sat_th = st.sidebar.slider("ความจืด", 0, 255, 110)
 # Main Title
 st.markdown('<p class="main-title">🥩 เครื่องคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("📸 อัปโหลดรูปภาพ", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
