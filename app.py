@@ -8,11 +8,11 @@ def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
     img = np.array(image)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     
-    # Resize เพื่อความรวดเร็ว
+    # ย่อขนาดภาพเริ่มต้นให้เล็กลงอีกนิดเพื่อประหยัดที่
     height, width = img.shape[:2]
-    if width > 800:
-        new_w = 800
-        new_h = int(height * (800 / width))
+    if width > 700:
+        new_w = 700
+        new_h = int(height * (700 / width))
         img = cv2.resize(img, (new_w, new_h))
 
     filtered = cv2.bilateralFilter(img, 9, 75, 75)
@@ -48,85 +48,105 @@ def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
 # --- UI Setup ---
 st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
 
+# CSS สำหรับบีบอัดพื้นที่ให้จบในหน้าเดียว
 st.markdown("""
     <style>
-    .block-container { padding-top: 3rem !important; max-width: 95% !important; }
-    .main-title { font-size: 2.2rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
-    .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
-    .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
+    /* บีบ Padding หลักของหน้าเว็บ */
+    .block-container { 
+        padding-top: 1rem !important; 
+        padding-bottom: 0rem !important; 
+        max-width: 98% !important; 
+    }
+    /* ย่อหัวข้อหลัก */
+    .main-title { 
+        font-size: 1.5rem !important; 
+        margin-bottom: 0.5rem !important; 
+    }
+    /* ปรับขนาดรูปภาพให้เล็กลงในโหมด Desktop และ Mobile */
+    .stImage > img { 
+        max-height: 220px !important; 
+        object-fit: contain; 
+        margin-bottom: -10px !important;
+    }
+    /* บีบส่วนข้อมูลสินค้า */
+    .product-info { 
+        font-size: 0.85rem !important; 
+        padding: 8px !important; 
+        margin-bottom: 5px !important; 
+    }
+    /* ลดระยะห่างระหว่างบรรทัด */
+    div.stVerticalBlock { gap: 0.3rem !important; }
+    /* ปรับแต่ง Metric ให้ตัวเล็กลงและชิดกัน */
+    [data-testid="stMetricValue"] { font-size: 1.2rem !important; }
+    /* ซ่อน Divider บางส่วนเพื่อประหยัดที่ */
+    hr { margin: 0.2rem 0 !important; }
+    h3 { font-size: 0.9rem !important; margin-top: 2px !important; }
     </style>
     """, unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.title("📱 มุมมอง")
-view_mode = st.sidebar.radio("โหมดปัจจุบัน:", ("Desktop", "Mobile"))
-
-st.sidebar.divider()
-st.sidebar.header("⚙️ ตั้งค่าความแม่นยำ")
+view_mode = st.sidebar.radio("โหมด:", ("Desktop", "Mobile"))
 fat_th = st.sidebar.slider("ความสว่าง", 50, 255, 125)
 sat_th = st.sidebar.slider("ความจืด", 0, 255, 110)
 
 # Main Title
 st.markdown('<p class="main-title">🥩 เครื่องคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
 
-# --- ส่วนกรอกข้อมูลสินค้า (เพิ่มใหม่) ---
-with st.expander("📝 บันทึกข้อมูลสินค้า / LOT (คลิกเพื่อระบุรายละเอียด)", expanded=True):
-    col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
-    product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
-    product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
-    inspector = col_in3.text_input("ผู้ตรวจสอบ", placeholder="ระบุชื่อของคุณ")
-    remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
+# ส่วนกรอกข้อมูลสินค้า (ย่อส่วน)
+with st.expander("📝 บันทึกข้อมูลสินค้า", expanded=False):
+    col_in1, col_in2 = st.columns(2)
+    product_lot = col_in1.text_input("LOT", placeholder="รหัส LOT")
+    product_name = col_in2.text_input("สินค้า", placeholder="ชื่อสินค้า")
+    inspector = col_in1.text_input("ผู้ตรวจ", placeholder="ชื่อผู้ตรวจ")
+    remark = col_in2.text_input("หมายเหตุ", placeholder="ระบุสั้นๆ")
 
-uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
+uploaded_file = st.file_uploader("📸 เลือกรูปภาพ", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    
-    with st.spinner('🔍 กำลังวิเคราะห์...'):
+    with st.spinner('🔍 วิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-    st.divider()
-
-    # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
+    # ข้อมูลการตรวจสอบแบบกระชับ
     st.markdown(f"""
-    <div class="product-info">
-        <b>ข้อมูลการตรวจสอบ</b><br>
-        วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}<br>
-        <b>LOT:</b> {product_lot if product_lot else '-'} | 
-        <b>สินค้า:</b> {product_name if product_name else '-'} | 
-        <b>ผู้ตรวจ:</b> {inspector if inspector else '-'}<br>
+    <div class="product-info" style="background-color: #f0f2f6; border-left: 5px solid red;">
+        <b>LOT:</b> {product_lot if product_lot else '-'} | <b>สินค้า:</b> {product_name if product_name else '-'} | <b>ผู้ตรวจ:</b> {inspector if inspector else '-'} | <b>วันที่:</b> {datetime.now().strftime('%d/%m/%y %H:%M')}<br>
         <b>หมายเหตุ:</b> {remark if remark else '-'}
     </div>
     """, unsafe_allow_html=True)
 
-    # Metrics
+    # Metrics สั้นๆ ในแถวเดียว
     m_col1, m_col2 = st.columns(2)
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
-    
-    st.divider()
 
     if view_mode == "Desktop":
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.subheader("🖼️ 1. รูปต้นฉบับ")
+            st.subheader("🖼️ 1.ต้นฉบับ")
             st.image(image, use_container_width=True)
         with col2:
-            st.subheader("✅ 2. ผลวิเคราะห์")
+            st.subheader("✅ 2.วิเคราะห์")
             st.image(result_img, use_container_width=True)
         with col3:
-            st.subheader("🎭 3. แยกสี (Mask)")
+            st.subheader("🎭 3.Mask")
             sub_c1, sub_c2 = st.columns(2)
-            sub_c1.image(m_light, caption="สว่าง", use_container_width=True)
-            sub_c2.image(m_pale, caption="จืด", use_container_width=True)
+            sub_c1.image(m_light, use_container_width=True)
+            sub_c2.image(m_pale, use_container_width=True)
     else:
-        st.subheader("✅ ผลวิเคราะห์")
-        st.image(result_img, use_container_width=True)
-        st.subheader("🖼️ รูปต้นฉบับ")
-        st.image(image, use_container_width=True)
-        with st.expander("🎭 ดูรายละเอียด Mask"):
-            st.image(m_light, caption="ความสว่าง", use_container_width=True)
-            st.image(m_pale, caption="ความจืด", use_container_width=True)
+        # โหมดมือถือบีบอัด: เอาภาพผลลัพธ์กับต้นฉบับมาวางคู่กัน (Side-by-Side) เพื่อลดความยาวหน้า
+        c1, c2 = st.columns(2)
+        with c1:
+            st.subheader("✅ ผลวิเคราะห์")
+            st.image(result_img, use_container_width=True)
+        with c2:
+            st.subheader("🖼️ ต้นฉบับ")
+            st.image(image, use_container_width=True)
+        
+        with st.expander("🎭 ดู Mask"):
+            st.image(m_light, use_container_width=True)
+            st.image(m_pale, use_container_width=True)
 
 else:
-    st.info("💡 กรุณากรอกข้อมูลสินค้าและอัปโหลดรูปภาพเพื่อเริ่มต้น")
+    st.info("💡 อัปโหลดรูปภาพ")
