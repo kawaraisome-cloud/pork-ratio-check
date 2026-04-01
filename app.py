@@ -48,44 +48,12 @@ def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
 # --- UI Setup ---
 st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
 
-# เพิ่ม Google Font และตั้งค่า CSS
 st.markdown("""
     <style>
-    /* 1. ดึงฟอนต์จาก Google Fonts (เลือก Sarabun หรือ Kanit ก็ได้) */
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
-
-    /* 2. บังคับใช้ฟอนต์กับทุกส่วนของแอป */
-    html, body, [class*="css"], .stMarkdown, p, div, h1, h2, h3, h4, h5, h6, span, label {
-        font-family: 'Sarabun', sans-serif !important;
-    }
-
-    /* 3. ปรับจูนช่องว่าง (Compact Mode เดิม) */
-    .block-container { 
-        padding-top: 1.5rem !important; 
-        padding-bottom: 0rem !important; 
-        max-width: 96% !important; 
-    }
-    
-    .main-title { 
-        font-size: 1.8rem !important; 
-        font-weight: 700;
-        margin-bottom: 0.5rem !important; 
-    }
-
-    .stImage > img { 
-        max-height: 240px !important; 
-        object-fit: contain; 
-        border-radius: 8px;
-    }
-
-    .product-info { 
-        font-size: 0.9rem !important; 
-        padding: 10px !important; 
-        background-color: #f8f9fa;
-        border-left: 5px solid #ff4b4b;
-    }
-
-    div.stVerticalBlock { gap: 0.4rem !important; }
+    .block-container { padding-top: 3rem !important; max-width: 95% !important; }
+    .main-title { font-size: 2.2rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
+    .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
+    .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -106,7 +74,7 @@ with st.expander("📝 บันทึกข้อมูลสินค้า / 
     col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
     product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
     product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
-    remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
+    remark = st.text_input("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
 
 uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
 
@@ -116,7 +84,7 @@ if uploaded_file is not None:
     with st.spinner('🔍 กำลังวิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-  # ---  st.divider()
+  # ---   st.divider()
 
     # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
     st.markdown(f"""
@@ -134,7 +102,7 @@ if uploaded_file is not None:
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
     
-   # ---  st.divider()
+ # ---    st.divider()
 
     if view_mode == "Desktop":
         col1, col2, col3 = st.columns(3)
