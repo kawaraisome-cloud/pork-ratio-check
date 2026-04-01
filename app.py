@@ -1,0 +1,145 @@
+import streamlit as st
+import cv2
+import numpy as np
+from PIL import Image
+
+def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
+    img = np.array(image)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    
+    # Resize เพื่อความรวดเร็ว
+    height, width = img.shape[:2]
+    if width > 800:
+        new_w = 800
+        new_h = int(height * (800 / width))
+        img = cv2.resize(img, (new_w, new_h))
+
+    filtered = cv2.bilateralFilter(img, 9, 75, 75)
+    hsv = cv2.cvtColor(filtered, cv2.COLOR_BGR2HSV)
+    gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
+    s_channel = hsv[:, :, 1]
+
+    _, mask_pork = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
+    mask_light = cv2.inRange(gray, fat_threshold, 255)
+    mask_pale = cv2.inRange(s_channel, 0, sat_threshold)
+    
+    mask_fat_raw = cv2.bitwise_and(mask_light, mask_pale)
+    mask_fat = cv2.bitwise_and(mask_fat_raw, mask_pork)
+
+    kernel = np.ones((3, 3), np.uint8)
+    mask_fat = cv2.morphologyEx(mask_fat, cv2.MORPH_OPEN, kernel)
+    mask_red = cv2.bitwise_and(mask_pork, cv2.bitwise_not(mask_fat))
+
+    total_pixels = cv2.countNonZero(mask_pork)
+    fat_pixels = cv2.countNonZero(mask_fat)
+    
+    red_p = (np.float64(cv2.countNonZero(mask_red)) / total_pixels * 100) if total_pixels > 0 else 0
+    fat_p = 100 - red_p if total_pixels > 0 else 0
+    
+    output_img = img.copy()
+    overlay = img.copy()
+    overlay[mask_red > 0] = [0, 0, 255]    
+    overlay[mask_fat > 0] = [255, 255, 255] 
+    cv2.addWeighted(overlay, 0.5, output_img, 0.5, 0, output_img)
+    
+    return red_p, fat_p, cv2.cvtColor(output_img, cv2.COLOR_BGR2RGB), mask_light, mask_pale
+
+# --- UI Setup ---
+st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
+
+# CSS แก้ไขอักษรขาดและจัดระเบียบหน้าจอ
+st.markdown("""
+    <style>
+    /* เพิ่มระยะห่างด้านบนสุดให้มากขึ้นเพื่อไม่ให้อักษรขาด */
+    .block-container {
+        padding-top: 3.5rem !important;
+        padding-bottom: 1rem !important;
+        max-width: 95% !important;
+    }
+    /* ปรับแต่งหัวข้อหลักให้ชัดเจน */
+    .main-title {
+        font-size: 2.2rem !important;
+        font-weight: bold;
+        margin-bottom: 1.5rem !important;
+        color: #31333F;
+        line-height: 1.2 !important;
+    }
+    /* จัดการรูปภาพให้สมดุล */
+    .stImage > img {
+        width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 8px;
+        background-color: #f8f9fb;
+    }
+    /* ลดช่องว่างแนวตั้ง */
+    div.stVerticalBlock {
+        gap: 1rem !important;
+    }
+    /* ปรับหัวข้อคอลัมน์ภาพ */
+    h3 {
+        font-size: 1.15rem !important;
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Sidebar
+st.sidebar.title("📱 มุมมอง")
+view_mode = st.sidebar.radio("โหมดปัจจุบัน:", ("Desktop", "Mobile"))
+
+st.sidebar.divider()
+st.sidebar.header("⚙️ ตั้งค่าความแม่นยำ")
+fat_th = st.sidebar.slider("ความสว่าง", 50, 255, 125)
+sat_th = st.sidebar.slider("ความจืด", 0, 255, 110)
+
+# Main Title
+st.markdown('<p class="main-title">🥩 เครื่องคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("📸 อัปโหลดรูปภาพ", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    
+    with st.spinner('🔍 กำลังวิเคราะห์...'):
+        red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
+
+    # Metrics (ไม่มี Progress Bar แล้ว)
+    st.divider()
+    m_col1, m_col2 = st.columns(2)
+    m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
+    m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
+    st.divider()
+
+    if view_mode == "Desktop":
+        # จัดระเบียบ 3 คอลัมน์
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.subheader("🖼️ 1. รูปต้นฉบับ")
+            st.image(image, use_container_width=True)
+            
+        with col2:
+            st.subheader("✅ 2. ผลวิเคราะห์")
+            st.image(result_img, use_container_width=True)
+            
+        with col3:
+            st.subheader("🎭 3. แยกสี (Mask)")
+            sub_c1, sub_c2 = st.columns(2)
+            with sub_c1:
+                st.image(m_light, caption="สว่าง", use_container_width=True)
+            with sub_c2:
+                st.image(m_pale, caption="จืด", use_container_width=True)
+    else:
+        # Mobile Mode
+        st.subheader("✅ ผลวิเคราะห์")
+        st.image(result_img, use_container_width=True)
+        st.subheader("🖼️ รูปต้นฉบับ")
+        st.image(image, use_container_width=True)
+        with st.expander("🎭 ดูรายละเอียด Mask"):
+            st.image(m_light, caption="ความสว่าง", use_container_width=True)
+            st.image(m_pale, caption="ความจืด", use_container_width=True)
+
+else:
+    st.info("💡 กรุณาอัปโหลดรูปภาพเพื่อเริ่มต้น")
