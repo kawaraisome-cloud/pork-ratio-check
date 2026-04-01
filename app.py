@@ -48,12 +48,44 @@ def process_meat_ratio_adjustable(image, fat_threshold, sat_threshold):
 # --- UI Setup ---
 st.set_page_config(page_title="Pork Ratio Pro", layout="wide")
 
+# เพิ่ม Google Font และตั้งค่า CSS
 st.markdown("""
     <style>
-    .block-container { padding-top: 3rem !important; max-width: 95% !important; }
-    .main-title { font-size: 2.2rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
-    .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
-    .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
+    /* 1. ดึงฟอนต์จาก Google Fonts (เลือก Sarabun หรือ Kanit ก็ได้) */
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
+
+    /* 2. บังคับใช้ฟอนต์กับทุกส่วนของแอป */
+    html, body, [class*="css"], .stMarkdown, p, div, h1, h2, h3, h4, h5, h6, span, label {
+        font-family: 'Sarabun', sans-serif !important;
+    }
+
+    /* 3. ปรับจูนช่องว่าง (Compact Mode เดิม) */
+    .block-container { 
+        padding-top: 1.5rem !important; 
+        padding-bottom: 0rem !important; 
+        max-width: 96% !important; 
+    }
+    
+    .main-title { 
+        font-size: 1.8rem !important; 
+        font-weight: 700;
+        margin-bottom: 0.5rem !important; 
+    }
+
+    .stImage > img { 
+        max-height: 240px !important; 
+        object-fit: contain; 
+        border-radius: 8px;
+    }
+
+    .product-info { 
+        font-size: 0.9rem !important; 
+        padding: 10px !important; 
+        background-color: #f8f9fa;
+        border-left: 5px solid #ff4b4b;
+    }
+
+    div.stVerticalBlock { gap: 0.4rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -102,7 +134,7 @@ if uploaded_file is not None:
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
     
-    st.divider()
+   # ---  st.divider()
 
     if view_mode == "Desktop":
         col1, col2, col3 = st.columns(3)
