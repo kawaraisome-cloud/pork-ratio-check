@@ -108,8 +108,8 @@ st.markdown('<p class="main-title"> 🐷 ระบบคำนวณสัดส
 # --- ส่วนกรอกข้อมูลสินค้า (เพิ่มใหม่) ---
 with st.expander("📝 รายละเอียดตัวอย่างสินค้า", expanded=True):
     col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
-    product_name = col_in2.text_input("ชื่อสินค้า / รหัสสินค้า", placeholder="เช่น หมูบดปนมัน 20%")
-    product_lot = col_in1.text_input("หมายเลข LOT", placeholder="เช่น 131070A1381904")
+    product_name = col_in1.text_input("ชื่อสินค้า / รหัสสินค้า", placeholder="เช่น หมูบดปนมัน 20%")
+    product_lot = col_in2.text_input("หมายเลข LOT", placeholder="เช่น 131070A1381904")
     remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
 
 uploaded_file = st.file_uploader("📷 ถ่ายรูปหรือ Upload ภาพสินค้า...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
@@ -123,10 +123,9 @@ if uploaded_file is not None:
     # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) 
     st.markdown(f"""
     <div class="product-info">
-        <b>ข้อมูลการตรวจสอบ</b><br>
-        วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-        <b>LOT:</b> {product_lot if product_lot else '-'} | 
+        <b>ข้อมูลการตรวจสอบ</b>  | วันที่-เวลา: {datetime.now().strftime('%d/%m/%Y %H:%M')}<br>
         <b>สินค้า:</b> {product_name if product_name else '-'} | 
+        <b>LOT:</b> {product_lot if product_lot else '-'} <br> 
         <b>หมายเหตุ:</b> {remark if remark else '-'}
     </div>
     """, unsafe_allow_html=True)
