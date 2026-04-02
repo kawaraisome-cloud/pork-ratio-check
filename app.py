@@ -54,6 +54,42 @@ st.markdown("""
     .main-title { font-size: 1.5rem !important; font-weight: bold; margin-bottom: 1rem !important; color: #31333F; }
     .stImage > img { width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; background-color: #f8f9fb; }
     .product-info { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #ff4b4b; margin-bottom: 20px; }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 2.5rem !important; /* ปรับขนาดตัวเลข*/
+        font-weight: 700 !important;
+        color: #31333F !important;
+    }
+[data-testid="stMetricLabel"] div, 
+    [data-testid="stMetricLabel"] p,
+    [data-testid="stMetricLabel"] span {
+        font-size: 1.5rem !important; /* ปรับขนาดให้ใหญ่สะใจไปเลย */
+        font-weight: 700 !important;
+        line-height: 1.5 !important;
+        color: #8f9096 !important;
+    }
+    /* 1. จัดระเบียบแถวที่เป็นตัวเลขเปอร์เซ็นต์ให้รวมกันตรงกลาง */
+    [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) {
+        gap: 20px !important; /* ช่องว่างระหว่างเลขเนื้อแดงกับมันหมู */
+        justify-content: center !important; /* ดึงเข้าหากลางจอ */
+        max-width: 600px !important; /* บีบความกว้างรวมของแถวเลข */
+        margin: 0 auto !important; /* จัดแถวเลขให้อยู่กึ่งกลางหน้าจอ */
+    }
+
+    /* 2. บังคับให้แต่ละ Metric กึ่งกลางตัวเอง */
+    [data-testid="stMetric"] {
+        text-align: center !important;
+        width: fit-content !important;
+        margin: 0 auto !important;
+    }
+
+    /* ปรับแต่ง Divider ให้เล็กลงและชิดขึ้น */
+    hr {
+        margin-top: 0.5rem !important;   /* ลดช่องว่างด้านบนเส้น */
+        margin-bottom: 0.5rem !important; /* ระยะห่างก่อนถึงรูปภาพ */
+        border-top: 1px solid #ddd !important; /* เส้นบางๆ สีเทาอ่อน */
+    }        
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -67,16 +103,16 @@ fat_th = st.sidebar.slider("ความสว่าง", 50, 255, 125)
 sat_th = st.sidebar.slider("ความจืด", 0, 255, 110)
 
 # Main Title
-st.markdown('<p class="main-title">🥩 เครื่องคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title"> 🐷 ระบบคำนวณสัดส่วนหมูบด</p>', unsafe_allow_html=True)
 
 # --- ส่วนกรอกข้อมูลสินค้า (เพิ่มใหม่) ---
-with st.expander("📝 บันทึกข้อมูลสินค้า / LOT (คลิกเพื่อระบุรายละเอียด)", expanded=True):
+with st.expander("📝 รายละเอียดตัวอย่างสินค้า", expanded=True):
     col_in1, col_in2, col_in3 = st.columns([1, 1, 1])
-    product_lot = col_in1.text_input("หมายเลข LOT / รหัสสินค้า", placeholder="เช่น LOT-670327-01")
-    product_name = col_in2.text_input("ชื่อสินค้า / ประเภท", placeholder="เช่น หมูบดเกรด A")
+    product_name = col_in2.text_input("ชื่อสินค้า / รหัสสินค้า", placeholder="เช่น หมูบดปนมัน 20%")
+    product_lot = col_in1.text_input("หมายเลข LOT", placeholder="เช่น 131070A1381904")
     remark = st.text_area("หมายเหตุเพิ่มเติม", placeholder="ระบุรายละเอียดอื่นๆ เช่น อุณหภูมิหน้างาน หรือแหล่งที่มา", height=70)
 
-uploaded_file = st.file_uploader("📸 ถ่ายรูปหรือเลือกรูปหมู...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
+uploaded_file = st.file_uploader("📷 ถ่ายรูปหรือ Upload ภาพสินค้า...", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
@@ -84,9 +120,7 @@ if uploaded_file is not None:
     with st.spinner('🔍 กำลังวิเคราะห์...'):
         red_p, fat_p, result_img, m_light, m_pale = process_meat_ratio_adjustable(image, fat_th, sat_th)
 
-  # ---  st.divider()
-
-    # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) ---
+    # --- ส่วนแสดงข้อมูลสินค้าในหน้าสรุปผล (เพื่อให้ติดไปตอนแคปจอ) 
     st.markdown(f"""
     <div class="product-info">
         <b>ข้อมูลการตรวจสอบ</b><br>
@@ -102,7 +136,7 @@ if uploaded_file is not None:
     m_col1.metric("🔴 เนื้อแดง", f"{red_p:.2f} %")
     m_col2.metric("⚪ มันหมู", f"{fat_p:.2f} %")
     
- # ---   st.divider()
+    st.divider()
 
     if view_mode == "Desktop":
         col1, col2, col3 = st.columns(3)
@@ -110,19 +144,19 @@ if uploaded_file is not None:
             st.subheader("🖼️ 1. รูปต้นฉบับ")
             st.image(image, use_container_width=True)
         with col2:
-            st.subheader("✅ 2. ผลวิเคราะห์")
+            st.subheader("🔬 2. ผลวิเคราะห์")
             st.image(result_img, use_container_width=True)
         with col3:
-            st.subheader("🎭 3. แยกสี (Mask)")
+            st.subheader("🔍 3. การวิเคราะห์")
             sub_c1, sub_c2 = st.columns(2)
-            sub_c1.image(m_light, caption="สว่าง", use_container_width=True)
-            sub_c2.image(m_pale, caption="จืด", use_container_width=True)
+            sub_c1.image(m_light, caption="ความสว่าง", use_container_width=True)
+            sub_c2.image(m_pale, caption="เฉดสี", use_container_width=True)
     else:
-        st.subheader("✅ ผลวิเคราะห์")
+        st.subheader("🔬 ผลวิเคราะห์")
         st.image(result_img, use_container_width=True)
         st.subheader("🖼️ รูปต้นฉบับ")
         st.image(image, use_container_width=True)
-        with st.expander("🎭 ดูรายละเอียด Mask"):
+        with st.expander("🔍 การวิเคราะห์"):
             st.image(m_light, caption="ความสว่าง", use_container_width=True)
             st.image(m_pale, caption="ความจืด", use_container_width=True)
 
